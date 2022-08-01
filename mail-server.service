@@ -3,6 +3,7 @@ Description=mail server
 
 [Service]
 Type=simple
+WorkingDirectory=/home/mustafa/project/mail-server
 ExecStart=/home/mustafa/project/mail-server/main
 Restart=always
 RestartSec=5s

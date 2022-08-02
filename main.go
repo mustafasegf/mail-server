@@ -16,6 +16,8 @@ import (
 type Config struct {
 	Email    string
 	Password string
+  SMTPHost string
+  SMTPPort string
 }
 
 type Request struct {
@@ -41,10 +43,9 @@ func main() {
 	config := Config{
 		Email:    os.Getenv("EMAIL"),
 		Password: os.Getenv("PASSWORD"),
+    SMTPHost: os.Getenv("SMTP_HOST"),
+    SMTPPort: os.Getenv("SMTP_PORT"),
 	}
-
-	smtpHost := "smtp.gmail.com"
-	smtpPort := "587"
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		var req Request
@@ -61,9 +62,9 @@ func main() {
 			"Subject: " + "[SERVER] from: " + req.Email + "\n\n" +
 			req.Message
 
-		auth := smtp.PlainAuth("", config.Email, config.Password, smtpHost)
+		auth := smtp.PlainAuth("", config.Email, config.Password, config.SMTPHost)
 
-		err := smtp.SendMail(smtpHost+":"+smtpPort, auth, config.Email, to, []byte(body))
+		err := smtp.SendMail(config.SMTPHost+":"+config.SMTPPort, auth, config.Email, to, []byte(body))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			log.Println(err)

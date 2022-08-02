@@ -16,14 +16,24 @@ import (
 type Config struct {
 	Email    string
 	Password string
-  SMTPHost string
-  SMTPPort string
+	SMTPHost string
+	SMTPPort string
 }
 
 type Request struct {
 	Name    string
 	Email   string
 	Message string
+}
+
+type unencryptedAuth struct {
+	smtp.Auth
+}
+
+func (a unencryptedAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	s := *server
+	s.TLS = true
+	return a.Auth.Start(&s)
 }
 
 func init() {
@@ -43,8 +53,8 @@ func main() {
 	config := Config{
 		Email:    os.Getenv("EMAIL"),
 		Password: os.Getenv("PASSWORD"),
-    SMTPHost: os.Getenv("SMTP_HOST"),
-    SMTPPort: os.Getenv("SMTP_PORT"),
+		SMTPHost: os.Getenv("SMTP_HOST"),
+		SMTPPort: os.Getenv("SMTP_PORT"),
 	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +72,7 @@ func main() {
 			"Subject: " + "[SERVER] from: " + req.Email + "\n\n" +
 			req.Message
 
-		auth := smtp.PlainAuth("", config.Email, config.Password, config.SMTPHost)
+		auth := unencryptedAuth{smtp.PlainAuth("", config.Email, config.Password, config.SMTPHost)}
 
 		err := smtp.SendMail(config.SMTPHost+":"+config.SMTPPort, auth, config.Email, to, []byte(body))
 		if err != nil {
